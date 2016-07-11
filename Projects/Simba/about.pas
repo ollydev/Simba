@@ -56,15 +56,52 @@ var
 implementation
 uses
   mufasabase,
-  SimbaUnit;
+  SimbaUnit,
+  resource, versiontypes, versionresource;
 { TAboutForm }
 
+function getVersion(out Major, Minor, Revision, Build: Integer): Boolean;
+var
+  Stream: TResourceStream;
+  Version: TVersionResource;
+begin
+  Result := False;
+  try
+    Stream := TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
+    try
+      Version := TVersionResource.Create();
+      try
+        Version.SetCustomRawDataStream(Stream);
+        with Version.FixedInfo do
+        begin
+          Major := FileVersion[0];
+          Minor := FileVersion[1];
+          Revision := FileVersion[2];
+          Build := FileVersion[3];
+        end;
+
+        Result := True;
+      finally
+        Version.SetCustomRawDataStream(nil);
+        Version.Free;
+      end;
+    finally
+      Stream.Free;
+    end;
+  except end;
+end;
+
 procedure TAboutForm.FormCreate(Sender: TObject);
+var
+  Major, Minor, Revision, Build: Integer;
 begin
   Self.Caption := format('About Simba r%d', [SimbaVersion]);
   Self.LabelRevision.Caption := format('Revision %d', [SimbaVersion]);
   AboutMemo.Lines.Add('Simba is released under the GPL license.');
-  AboutMemo.Lines.Add(format('You are currently using version: %d',[SimbaVersion]));
+  if (getVersion(Major, Minor, Revision, Build)) then
+    AboutMemo.Lines.Add(Format('You are using Simba version %d.%d.%d (Build %d).', [Major, Minor, Revision, Build]))
+  else
+    AboutMemo.Lines.Add('You are using an unknown version of Simba.');
   AboutMemo.Lines.Add(format('Compiled with FPC version %d.%d.%d', [FPC_VERSION,
       FPC_RELEASE, FPC_PATCH]));
   AboutMemo.Lines.Add('');
