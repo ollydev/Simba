@@ -10,13 +10,13 @@
 ifdef LAZARUS_PATH
 lazaruspath := $(LAZARUS_PATH)
 else
-lazaruspath := /usr/lib/lazarus/0.9.28.2
+lazaruspath := /Users/brandonanthony/bin/lazarus/laz_fixes
 endif
 
 ifdef FPC_PATH
 fpcpath = $(FPC_PATH)
 else
-fpcpath = fpc
+fpcpath = /usr/local/bin/fpc
 endif
 
 # uncomment this or send distrib=1 via command line to build the distributable archive as well

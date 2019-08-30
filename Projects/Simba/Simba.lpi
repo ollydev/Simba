@@ -11,10 +11,11 @@
       <MainUnit Value="0"/>
       <Title Value="Simba"/>
       <Icon Value="0"/>
-      <Resources Count="3">
+      <Resources Count="4">
         <Resource_0 FileName="..\..\Units\Misc\Web\openssl\linux64.zip" Type="RCDATA" ResourceName="OPENSSL_LINUX64"/>
         <Resource_1 FileName="..\..\Units\Misc\Web\openssl\win32.zip" Type="RCDATA" ResourceName="OPENSSL_WIN32"/>
         <Resource_2 FileName="..\..\Units\Misc\Web\openssl\win64.zip" Type="RCDATA" ResourceName="OPENSSL_WIN64"/>
+        <Resource_3 FileName="../../Units/Misc/Web/openssl/darwin64.zip" Type="RCDATA" ResourceName="OPENSSL_DARWIN64"/>
       </Resources>
     </General>
     <LazDoc Paths="../../LazDoc"/>
@@ -206,7 +207,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="../../Simba.$(TargetCPU)-$(TargetOS)-debug"/>
+      <Filename Value="../../Simba"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../Units/lape;../../Units/MMLAddon/imports/lape;$(LazarusDir)/components/synedit;../../Units/Misc/MatchTemplate;../../Units/MMLAddon/oswindow"/>
@@ -227,9 +228,6 @@
         <StackChecks Value="True"/>
       </Checks>
       <TargetCPU Value="x86_64"/>
-      <Optimizations>
-        <OptimizationLevel Value="0"/>
-      </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
