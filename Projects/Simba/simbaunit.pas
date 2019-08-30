@@ -30,6 +30,7 @@ interface
 
 uses
   {$IFDEF LINUX}cthreads, cmem, pthreads,{$ENDIF}
+  {$IFDEF DARWIN}cthreads, cmem, pthreads,{$ENDIF}
   {$IFDEF WINDOWS}windows,{$ENDIF}
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, Menus, ComCtrls, ExtCtrls, SynEdit, SynHighlighterLape,
@@ -58,7 +59,11 @@ uses
 
 const
   { Place the shortcuts here }
-  {$IFDEF LINUX}
+  {$IF DEFINED(LINUX)}
+  shortcut_StartScript = '<Ctrl><Alt>R';
+  shortcut_StopScript =  '<Ctrl><Alt>S';
+  shortcut_PickColour =  '<Ctrl><Alt>P';
+  {$ELSEIF DEFINED(DARWIN)}
   shortcut_StartScript = '<Ctrl><Alt>R';
   shortcut_StopScript =  '<Ctrl><Alt>S';
   shortcut_PickColour =  '<Ctrl><Alt>P';
@@ -534,7 +539,7 @@ uses
    LazFileUtils,
    process,
    debugimage,
-   files,
+   simbafiles,
    bitmapconv,
    colourhistory,
    math,
@@ -2163,6 +2168,10 @@ procedure TSimbaForm.FileBrowser_Popup_OpenExternally(Sender: TObject);
     {$IFDEF LINUX}
     Executable := 'xdg-open';
     {$ENDIF}
+
+    {$IFDEF DARWIN}
+    Executable := 'open';
+    {$ENDIF}
     
     if Executable = '' then
       raise Exception.Create('OpenDirectory is unsupported on your OS');
@@ -2398,7 +2407,7 @@ begin
 
     {$IFDEF LINUX_HOTKEYS}
     Bind_Linux_Keys();
-    {$ENDIF}
+    {$ENDIF}   //TODO: DARWIN
 
     {$IFDEF USE_SCRIPTMANAGER}
     MenuItemFormDesigner.Visible := True;
@@ -2456,7 +2465,7 @@ begin
   Unbind_Windows_Keys;
   {$else}
   {$IFDEF LINUX_HOTKEYS}
-  Unbind_Linux_Keys;
+  Unbind_Linux_Keys; //TODO: DARWIN
   {$ENDIF}
   {$endif}
 
@@ -2807,6 +2816,9 @@ begin
   if(Button = mbLeft)then
   begin
     {$ifdef linux}
+    PageControl1.TabIndex := PageControl1.IndexOfPageAt(Point(x,y));
+    {$endif}
+    {$ifdef DARWIN}
     PageControl1.TabIndex := PageControl1.IndexOfPageAt(Point(x,y));
     {$endif}
     PageControl1.BeginDrag(false, 10);

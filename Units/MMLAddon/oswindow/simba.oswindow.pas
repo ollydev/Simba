@@ -72,6 +72,10 @@ implementation
   {$INCLUDE oswindow_windows.inc}
 {$ENDIF}
 
+{$IFDEF DARWIN}
+  {$INCLUDE oswindow_darwin.inc}
+{$ENDIF}
+
 function TOSWindowArray_Helper.GetByTitle(Title: String; out Window: TOSWindow): Boolean;
 begin
   for Window in Self do
@@ -206,9 +210,9 @@ begin
   if Length(Result) > 0 then
   begin
     if Length(Left) > 0 then
-      Move(Left[0], Result[0], Length(Left) * SizeOf(TOSWindow));
+      System.Move(Left[0], Result[0], Length(Left) * SizeOf(TOSWindow));
     if Length(Right) > 0 then
-      Move(Right[0], Result[Length(Left)], Length(Right) * SizeOf(TOSWindow));
+      System.Move(Right[0], Result[Length(Left)], Length(Right) * SizeOf(TOSWindow));
   end;
 end;
 

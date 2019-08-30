@@ -21,7 +21,7 @@ end;
 
 procedure Lape_GetCurrentThreadID(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PPtrUInt(Result)^ := GetCurrentThreadID();
+  PPtrUInt(Result)^ := {$IFDEF DARWIN}PtrUInt(GetCurrentThreadID()){$ELSE}GetCurrentThreadID(){$ENDIF};
 end;
 
 procedure Lape_Wait(const Params: PParamArray); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
@@ -66,6 +66,9 @@ begin
     {$ENDIF}
     {$IFDEF LINUX}
     addBaseDefine('LINUX');
+    {$ENDIF}
+    {$IFDEF DARWIN}
+    addBaseDefine('DARWIN');
     {$ENDIF}
 
     addGlobalType('array of String', 'TStringArray');

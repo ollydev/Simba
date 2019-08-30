@@ -109,8 +109,10 @@ uses
   simba.target_raw,
   simba.target_bitmap,
   simba.target_eios,
-  {$IFDEF WINDOWS}
+  {$IF DEFINED(WINDOWS)}
   simba.target_windows
+  {$ELSEIF DEFINED(DARWIN)}
+  simba.target_darwin
   {$ELSE}
   simba.target_linux
   {$ENDIF};

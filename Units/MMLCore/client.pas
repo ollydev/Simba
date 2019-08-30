@@ -30,7 +30,7 @@ interface
 
 uses
   Classes, SysUtils, MufasaTypes,MufasaBase,
-  simba.iomanager, Files, Finder, Bitmaps, dtm, ocr, internets;
+  simba.iomanager, SimbaFiles, SimbaFinder, Bitmaps, dtm, ocr, internets;
 
 (*
 

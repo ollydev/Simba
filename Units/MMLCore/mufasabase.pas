@@ -36,12 +36,20 @@ const
   SimbaVersion = 1302;
   SimbaMajor = 1300; // this should be 980 even if SimbaVersion is 981, etc
 
-  SimbaURL = {$IFDEF WINDOWS}
+  SimbaURL = {$IF DEFINED(WINDOWS)}
                 {$IFDEF CPU32}
                 'http://simba.villavu.com/bin/Windows/x86/Stable/'
                 {$IFDEF NOTPORTABLE} + 'SystemWide/'{$ENDIF}
                 {$ELSE}
                 'http://simba.villavu.com/bin/Windows/x86_64/Stable/'
+                {$IFDEF NOTPORTABLE} + 'SystemWide/'{$ENDIF}
+                {$ENDIF}
+             {$ELSEIF DEFINED(DARWIN)}
+                {$IFDEF CPUI386}
+                'http://simba.villavu.com/bin/MacOS/x86/Stable/'
+                {$IFDEF NOTPORTABLE} + 'SystemWide/'{$ENDIF}
+                {$ELSE}
+                'http://simba.villavu.com/bin/MacOS/x86_64/Stable/'
                 {$IFDEF NOTPORTABLE} + 'SystemWide/'{$ENDIF}
                 {$ENDIF}
              {$ELSE}

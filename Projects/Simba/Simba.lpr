@@ -29,8 +29,10 @@ program Simba;
 {$R Simba.res}
 
 uses
-  {$IFDEF UNIX}
-  cthreads, cmem, linux_startup,
+  {$IF DEFINED(DARWIN)}
+  cthreads, cmem, macos_startup,
+  {$ELSEIF DEFINED(UNIX)}
+    cthreads, cmem, linux_startup,
   {$ENDIF}
   Interfaces, Forms,
   simbaunit, colourhistory, about, debugimage, bitmapconv, updateform, simbasettingsold, simbasettingssimple,

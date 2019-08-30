@@ -125,7 +125,13 @@ i386-win32:
 x86_64-win64:
 	$(MAKE) recursive_build platform="x86_64-win64" widgetset="win32" os="win64" cpu="x86_64"
 
-all: i386-linux x86_64-linux i386-win32 x86_64-win64
+i386-darwin:
+	$(MAKE) recursive_build platform="i386-darwin" widgetset="cocoa" os="darwin" cpu="i386"
+
+x86_64-darwin:
+	$(MAKE) recursive_build platform="x86_64-darwin" widgetset="cocoa" os="darwin" cpu="x86_64"
+
+all: i386-linux x86_64-linux i386-win32 x86_64-win64 i386-darwin x86_64-darwin
 
 all-in-one-distrib: all
 # setup the Scripts directory correctly

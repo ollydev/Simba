@@ -14,7 +14,7 @@ procedure Register_TMFiles(Compiler: TLapeCompiler);
 implementation
 
 uses
-  files, MufasaTypes;
+  simbafiles, MufasaTypes;
 
 type
   PMFiles = ^TMFiles;

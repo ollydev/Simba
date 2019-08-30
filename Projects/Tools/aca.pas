@@ -289,8 +289,8 @@ begin
     FZoom.Previous := FZoom.Current;
     FZoom.Current *= 2.00;
     // Lazarus image stretching SUCKS on linux
-    if (FZoom.Current > {$IFDEF LINUX}4.00{$ELSE}32.00{$ENDIF}) then
-      FZoom.Current := {$IFDEF LINUX}4.00{$ELSE}32.00{$ENDIF};
+    if (FZoom.Current > {$IF DEFINED(LINUX) OR DEFINED(DARWIN)}4.00{$ELSE}32.00{$ENDIF}) then
+      FZoom.Current := {$IF DEFINED(LINUX) OR DEFINED(DARWIN)}4.00{$ELSE}32.00{$ENDIF};
     // limitation in SetBounds
     if (Trunc(FClient.MBitmaps[0].Width * FZoom.Current) > 100000) or (Trunc(FClient.MBitmaps[0].Height * FZoom.Current) > 100000) then
       FZoom.Current := FZoom.Previous;

@@ -10,7 +10,7 @@ uses
 implementation
 
 uses
-  script_imports, script_thread, lpcompiler, lptypes, mufasatypes, files, fileutil;
+  script_imports, script_thread, lpcompiler, lptypes, mufasatypes, simbafiles, fileutil;
 
 procedure Lape_CreateFile(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin

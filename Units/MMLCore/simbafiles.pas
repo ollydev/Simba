@@ -21,7 +21,7 @@
     Files Class for the Mufasa Macro Library
 }
 
-unit files;
+unit simbafiles;
 
 {$mode objfpc}{$H+}
 

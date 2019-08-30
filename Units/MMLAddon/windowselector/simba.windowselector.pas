@@ -58,6 +58,10 @@ implementation
   {$INCLUDE windowselector_linux.inc}
 {$ENDIF}
 
+{$IFDEF DARWIN}
+  {$INCLUDE windowselector_darwin.inc}
+{$ENDIF}
+
 constructor TMWindowSelector.Create;
 begin
   FLastPick := 0;

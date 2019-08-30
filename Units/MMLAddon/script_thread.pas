@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils,
   lpparser, lpcompiler, lptypes, lpvartypes, lpmessages, lpinterpreter,
-  Client, Settings, SettingsSandbox, Files, script_plugins;
+  Client, Settings, SettingsSandbox, SimbaFiles, script_plugins;
 
 type
   PErrorData = ^TErrorData;
@@ -80,6 +80,7 @@ implementation
 
 uses
   {$IFDEF LINUX} pthreads, {$ENDIF}
+  {$IFDEF DARWIN} pthreads, {$ENDIF}
   script_imports, fpexprpars, mmisc;
 
 procedure TMMLScriptThread.SetState(Value: EMMLScriptState);
@@ -279,6 +280,10 @@ begin
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nil);
   {$ENDIF}
 
+  {$IFDEF DARWIN}
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nil);
+  {$ENDIF}
+
   FRunning := bTrue;
 
   try
@@ -400,6 +405,47 @@ end;
 {$ENDIF}
 
 {$IFDEF LINUX}
+(*
+  For this to work `thread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nil);` must be called on the script thread and
+  `pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nil);` must called on simba initialization.
+*)
+function TMMLScriptThread.Kill: Boolean;
+const
+  ESRCH = 3;
+var
+  T: UInt64;
+begin
+  pthread_detach(Handle);
+
+  if (pthread_cancel(Handle) = 0) then
+  begin
+    T := GetTickCount64() + 2500;
+
+    while (T > GetTickCount64()) do
+    begin
+      if (pthread_kill(Handle, 0) = ESRCH) then
+      begin
+        OnTerminate(Self);
+
+        if (FClient <> nil) then
+          FreeAndNil(FClient);
+        if (FSettings <> nil) Then
+          FreeAndNil(FSettings);
+        if (FCompiler <> nil) then
+          FreeAndNil(FCompiler);
+
+        Exit(True);
+      end;
+
+      Sleep(1);
+    end;
+  end;
+
+  Exit(False);
+end;
+{$ENDIF}
+
+{$IFDEF DARWIN}
 (*
   For this to work `thread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nil);` must be called on the script thread and
   `pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nil);` must called on simba initialization.

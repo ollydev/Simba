@@ -15,11 +15,11 @@ implementation
 uses
   client,
   simba.iomanager,
-  files,
+  simbafiles,
   bitmaps,
   dtm,
   ocr,
-  finder,
+  simbafinder,
   MufasaTypes;
 
 type

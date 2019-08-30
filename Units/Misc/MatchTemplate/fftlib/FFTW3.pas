@@ -68,12 +68,18 @@ const
   LIB_NAME = 'libfftw3f-3_32.so';
   {$ELSEIF Defined(CPUX86_64) and Defined(LINUX)}
   LIB_NAME = 'libfftw3f-3_64.so';
+  {$ELSEIF Defined(CPU386) and Defined(DARWIN)}
+  LIB_NAME = 'libfftw3f-3_32.dylib';
+  {$ELSEIF Defined(CPUX86_64) and Defined(DARWIN)}
+  LIB_NAME = 'libfftw3f-3_64.dylib';
   {$ENDIF}
 
   {$IF Defined(Windows)}
   ALT_LIB_NAME = 'libfftw3f-3.dll';
   {$ELSEIF Defined(Linux)}
   ALT_LIB_NAME = 'libfftw3f-3.so';
+  {$ELSEIF Defined(DARWIN)}
+  ALT_LIB_NAME = 'libfftw3f-3.dylib';
   {$ENDIF}
 
 
