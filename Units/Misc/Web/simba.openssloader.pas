@@ -37,6 +37,10 @@ begin
   {$IFDEF LINUX}
     Stream := TResourceStream.Create(HInstance, 'OPENSSL_LINUX64', RT_RCDATA);
   {$ENDIF}
+
+  {$IFDEF DARWIN}
+    Stream := TResourceStream.Create(HInstance, 'OPENSSL_DARWIN64', RT_RCDATA);
+  {$ENDIF}
 end;
 
 procedure TSimbaOpenSSLLoader.CreateOutputStream(Sender: TObject; var Stream: TStream; Item: TFullZipFileEntry);

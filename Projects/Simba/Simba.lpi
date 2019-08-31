@@ -28,9 +28,15 @@
       <CharSet Value="04B0"/>
       <StringTable CompanyName="Villavu.com" FileDescription="Simba: http://wizzup.org/simba/" OriginalFilename="Simba.exe" ProductName="Simba" ProductVersion="1.3 RC2"/>
     </VersionInfo>
+    <MacroValues Count="1">
+      <Macro1 Name="LCLWidgetType" Value="cocoa"/>
+    </MacroValues>
     <BuildModes Count="2">
       <Item1 Name="Debug" Default="True"/>
       <Item2 Name="Release">
+        <MacroValues Count="1">
+          <Macro1 Name="LCLWidgetType" Value="cocoa"/>
+        </MacroValues>
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
@@ -67,6 +73,9 @@
           </Other>
         </CompilerOptions>
       </Item2>
+      <SharedMatrixOptions Count="1">
+        <Item1 ID="546461069683" Modes="Debug,Release" Type="IDEMacro" MacroName="LCLWidgetType" Value="cocoa"/>
+      </SharedMatrixOptions>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
