@@ -2,7 +2,7 @@
 
 uses
   baseunix,
-  cocoaall, macosall;
+  macosall, simba.darwin_inputhelpers;
 
 function TOSWindow_Helper.IsValid: Boolean;
 var
@@ -17,20 +17,8 @@ begin
 end;
 
 function TOSWindow_Helper.IsActive: Boolean;
-var
-  windowIds, windows: CFArrayRef;
 begin
-  windowIds := CFArrayCreateMutable(nil, 1, nil);
-  CFArrayAppendValue(windowIds, UnivPtr(Self));
-  windows := CGWindowListCreateDescriptionFromArray(windowIds);
-  CFRelease(windowIds);
-  if CFArrayGetCount(windows) < 1 then
-  begin
-    Exit(False);
-  end;
-  //TODO: Implement
-  Result := True;
-  CFRelease(windows);
+  Result := isWindowActive(Self);
 end;
 
 function TOSWindow_Helper.IsActive(Time: Int32): Boolean;
@@ -56,12 +44,12 @@ end;
 
 function TOSWindow_Helper.GetPID: UInt32;
 begin
-  Result := 0; //TODO: Implement
+  Result := GetWindowInfo(Self).ownerPid;
 end;
 
 function TOSWindow_Helper.GetRootWindow: TOSWindow;
 begin
-  Result := 0; //TODO: Implement
+  Result := Self;
 end;
 
 function TOSWindow_Helper.GetClassName: WideString;
@@ -71,41 +59,28 @@ end;
 
 function TOSWindow_Helper.GetTitle: WideString;
 begin
-  Result := ''; //TODO: Implement
+  Result := GetWindowInfo(Self).title;
 end;
 
 function TOSWindow_Helper.GetBounds(out Bounds: TBox): Boolean;
 var
-   windowIds, windows: CFArrayRef;
-   boundsInfo: CFDictionaryRef;
-   fbounds: CGRect;
+  info: TWindowInfo;
 begin
+  info := GetWindowInfo(Self);
+  if info.id <> high(CGWindowID) then
+  begin
+    Bounds.X1 := info.x;
+    Bounds.Y1 := info.y;
+    Bounds.X2 := info.x + info.width;
+    Bounds.Y2 := info.y + info.height;
+    Exit(True);
+  end;
+
   Bounds.X1 := -1;
   Bounds.Y1 := -1;
   Bounds.X2 := -1;
   Bounds.Y2 := -1;
-  fbounds := CGRectNull;
-  windowIds := CFArrayCreateMutable(nil, 1, nil);
-  CFArrayAppendValue(windowIds, UnivPtr(Self));
-  windows := CGWindowListCreateDescriptionFromArray(windowIds);
-  CFRelease(windowIds);
-
-  if (CFArrayGetCount(windows) < 1) then
-  begin
-      Exit(False);
-  end;
-
-  boundsInfo := CFDictionaryGetValue(CFDictionaryRef(CFArrayGetValueAtIndex(windows, 0)), kCGWindowBounds);
-  Result := CGRectMakeWithDictionaryRepresentation(boundsInfo, fbounds) <> 0;
-  CFRelease(windows);
-
-  if Result then
-  begin
-    Bounds.X1 := round(fbounds.origin.x);
-    Bounds.Y1 := round(fbounds.origin.y);
-    Bounds.X2 := Bounds.X1 + round(fbounds.size.width);
-    Bounds.Y2 := Bounds.Y1 + round(fbounds.size.height);
-  end;
+  Exit(False);
 end;
 
 function TOSWindow_Helper.GetBounds: TBox;
@@ -172,7 +147,7 @@ end;
 
 function GetDesktopWindow: TOSWindow;
 begin
-  //Result := XDefaultRootWindow(DefaultDisplay);
+  Result := kCGNullWindowID;
 end;
 
 function GetTopWindows: TOSWindowArray;
@@ -193,17 +168,22 @@ function GetTopWindows: TOSWindowArray;
           Exit(True);
       end;
     end;
-  end;
+  end;}
 var
   Windows: TOSWindowArray;
-  i: Int32;}
+  windowInfos: CFArrayRef;
+  i: Int32;
 begin
-  {SetLength(Result, 0);
-  Windows := XGetChildren(DefaultDisplay, GetDesktopWindow, FAlse);
+  SetLength(Result, 0);
+  windowInfos := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
+
+
+
+  Windows := CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID);
   for i := High(Windows) downto 0 do
     if IsVisible(Windows[i]) then
     begin
       SetLength(Result, Length(Result) + 1);
       Result[High(Result)] := Windows[i];
-    end;}
+    end;
 end;

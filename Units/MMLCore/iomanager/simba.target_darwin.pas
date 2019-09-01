@@ -265,6 +265,8 @@ var
 begin
   event := CGEventCreate(nil);
   point := CGEventGetLocation(event);
+  CFRelease(event);
+
   X := round(point.x);
   Y := round(point.y);
   MouseClientAreaOffset(X, Y);

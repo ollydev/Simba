@@ -1,10 +1,12 @@
 {&MainUnit windowselector.pas}
 
 uses
-  simba.darwin_inputhelpers;
+  cocoaall, macosall, simba.darwin_inputhelpers;
+
+type TWindow = CGWindowID; //TODO: Abstract
 
 function TMWindowSelector.Drag: TOSWindow;
-{type
+type
   TWindowTree = record
     Window: TOSWindow;
     Children: array of TWindowTree;
@@ -40,27 +42,29 @@ function TMWindowSelector.Drag: TOSWindow;
       if Temp <> 0 then
         Result := Temp;
     end;
-  end;}
+  end;
 
-//var
-  {Windows: TOSWindowArray;
+var
+  Windows: TOSWindowArray;
   Trees: array of TWindowTree;
-  Root, Child: TWindow;
-  RootX, RootY, X, Y, Mask: Int32;
+  X, Y: Int32;
+  Mask: Boolean;
   Bounds: TBox;
   Window: TOSWindow;
-  i: Int32;}
+  i: Int32;
 begin
   Result := 0;
 
-  {Windows := GetTopWindows();
+  Windows := GetTopWindows();
 
   SetLength(Trees, Length(Windows));
   for i := 0 to High(Windows) do
-    BuildTree(Trees[i], Windows[i]);}
+    BuildTree(Trees[i], Windows[i]);
 
-  {repeat
-    XQueryPointer(DefaultDisplay, GetDesktopWindow(), @Root, @Child, @RootX, @RootY, @X, @Y, @Mask);
+  repeat
+    GetCursorPos(X, Y);
+    Mask := IsMouseButtonDown(kCGMouseButtonLeft);
+
     Window := 0;
     for i := 0 to High(Trees) do
     begin
@@ -94,7 +98,7 @@ begin
     end;
     Sleep(25);
     Application.ProcessMessages();
-  until (Mask and Button1Mask) = 0;}
+  until Mask;
 
   FLastPick := Result;
   FHasPicked := True;

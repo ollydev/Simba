@@ -57,6 +57,7 @@
           <Linking>
             <Debugging>
               <GenerateDebugInfo Value="False"/>
+              <DebugInfoType Value="dsDwarf2Set"/>
             </Debugging>
             <LinkSmart Value="True"/>
           </Linking>
@@ -65,10 +66,6 @@
               <IgnoredMessages idx5024="True"/>
             </CompilerMessages>
             <CustomOptions Value="-dLape_CDECL"/>
-            <OtherDefines Count="2">
-              <Define0 Value="Lape_CDECL"/>
-              <Define1 Value="StaticFFI"/>
-            </OtherDefines>
             <CreateMakefileOnBuild Value="True"/>
           </Other>
         </CompilerOptions>
@@ -240,7 +237,7 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf3"/>
+        <DebugInfoType Value="dsDwarf2"/>
         <UseHeaptrc Value="True"/>
       </Debugging>
     </Linking>
