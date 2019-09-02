@@ -18,7 +18,7 @@ unit FFTW3;
 interface
 
 uses
-  SysUtils, dynlibs, mtCore;
+  SysUtils, dynlibs, mtcore;
 
 
 type
@@ -105,7 +105,7 @@ implementation
 
 uses
   math, utf8process,
-  mtMatrix;
+  mtmatrix;
 
 
 const

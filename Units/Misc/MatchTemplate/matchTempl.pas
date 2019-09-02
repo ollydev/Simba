@@ -1,4 +1,4 @@
-unit matchTempl;
+unit matchtempl;
 {==============================================================================]
   Copyright © 2018, Jarl Krister Holta
   
@@ -19,7 +19,7 @@ unit matchTempl;
 interface
 
 uses
-  SysUtils, mtCore;
+  SysUtils, mtcore;
 
 const
   MATCH_CCORR         = 0;
@@ -42,7 +42,7 @@ implementation
 
 uses
   math, utf8process,
-  mtMatrix, FFTPACK4, FFTW3,
+  mtmatrix, FFTPACK4, FFTW3,
   simba_threadpool;
 
 type

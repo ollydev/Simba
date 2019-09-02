@@ -79,7 +79,8 @@ end;
 function ParamArray(arr: array of Pointer): TParamArray;
 var i:Int32;
 begin
-  for i:=0 to High(arr) do Result[i] := arr[i];
+  for i:=0 to High(arr) do
+    Result[i] := arr[i];
 end;
 
 function Box(X1,Y1,X2,Y2: Int32): TBox;

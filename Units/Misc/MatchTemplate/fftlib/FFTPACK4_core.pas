@@ -12,7 +12,7 @@ unit FFTPACK4_core;
 interface
 
 uses
-  SysUtils, mtCore;
+  SysUtils;
 
 type
   PSingle = ^Single;

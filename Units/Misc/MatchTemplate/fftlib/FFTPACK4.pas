@@ -18,7 +18,7 @@ unit FFTPACK4;
 interface
 
 uses
-  SysUtils, FFTPACK4_core, mtCore;
+  SysUtils, FFTPACK4_core, mtcore;
 
 type
   CFFT_FUNC = function(data, plan: TComplexArray; Inplace:Boolean=False): TComplexArray;
@@ -55,7 +55,7 @@ implementation
 
 uses
  math, utf8process,
- mtMatrix, simba_threadpool;
+ mtmatrix, simba_threadpool;
 
 
 const

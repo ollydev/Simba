@@ -16,9 +16,12 @@
   {$FPUTYPE SSE64}
 {$ENDIF}
 
-{$DEFINE callconv :=
-  {$IFDEF WINDOWS}{$IFDEF CPU32}cdecl;{$ELSE}{$ENDIF}{$ENDIF}
-  {$IFDEF LINUX}{$IFDEF CPU32}cdecl;{$ELSE}{$ENDIF}{$ENDIF}
-}
+{$DEFINE callconv}
+{$IF DEFINED(WINDOWS) OR DEFINED(LINUX) OR DEFINED(DARWIN)}
+  {$IFDEF CPU32}
+    {$UNDEF callconv}
+    {$DEFINE callconv := cdecl;}
+  {$ENDIF}
+{$ENDIF}
 
 {$modeswitch advancedrecords}
