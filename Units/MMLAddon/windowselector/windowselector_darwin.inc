@@ -48,7 +48,6 @@ var
   Windows: TOSWindowArray;
   Trees: array of TWindowTree;
   X, Y: Int32;
-  Mask: Boolean;
   Bounds: TBox;
   Window: TOSWindow;
   i: Int32;
@@ -61,9 +60,9 @@ begin
   for i := 0 to High(Windows) do
     BuildTree(Trees[i], Windows[i]);
 
-  repeat
+  while (IsMouseButtonDown(kCGMouseButtonLeft)) do
+  begin
     GetCursorPos(X, Y);
-    Mask := IsMouseButtonDown(kCGMouseButtonLeft);
 
     Window := 0;
     for i := 0 to High(Trees) do
@@ -98,7 +97,7 @@ begin
     end;
     Sleep(25);
     Application.ProcessMessages();
-  until Mask;
+  end;
 
   FLastPick := Result;
   FHasPicked := True;

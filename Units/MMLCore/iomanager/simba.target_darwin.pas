@@ -14,8 +14,7 @@ type
   protected
     FWindow: TOSWindow;
     FAutoFocus: Boolean;
-    FImage: CGImageRef;
-    FData: CFDataRef;
+    FData: Pointer;
 
     function GetHandle: PtrUInt; override;
     procedure SetHandle(Value: PtrUInt); override;
@@ -150,8 +149,6 @@ var
   Bounds: TBox;
   Image: CGImageRef;
   Rect: CGRect;
-  Buffer: CFDataRef;
-  ScalingFactor: Double;
   ColorSpace: CGColorSpaceRef;
   Context: CGContextRef;
 begin
@@ -169,31 +166,13 @@ begin
     Rect := CGRectMake(x, y, width, height);
     Image := CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, FWindow, kCGWindowImageBoundsIgnoreFraming);
 
-    ScalingFactor := NSNumber(NSScreen.mainScreen.valueForKey(NSStr('backingScaleFactor'))).doubleValue;
-    if (ScalingFactor > 1) then
-    begin
-      ColorSpace := CGImageGetColorSpace(image);
-      Context := CGBitmapContextCreate(nil, width, height, 8, 0, ColorSpace, CGImageGetBitmapInfo(image));
-      CGColorSpaceRelease(ColorSpace);
-      CGContextDrawImage(Context, rect, image);
-      CGImageRelease(Image);
-      Image := CGBitmapContextCreateImage(Context);
-      CGContextRelease(Context);
-    end;
-
-    Buffer := CGDataProviderCopyData(CGImageGetDataProvider(image));
-
-    if (Buffer <> nil) then
-    begin
-      try
-        Result := GetMem(Width * Height * SizeOf(TRGB32));
-        System.Move(Buffer^, Result^, Width * Height * SizeOf(TRGB32));
-      finally
-        CFRelease(Buffer);
-        CGImageRelease(Image);
-      end;
-    end else
-      CGImageRelease(Image);
+    Result := GetMem(Width * Height * SizeOf(TRGB32));
+    ColorSpace := CGColorSpaceCreateDeviceRGB();
+    Context := CGBitmapContextCreate(Result, width, height, 8, Width * SizeOf(TRGB32), ColorSpace, kCGImageAlphaPremultipliedFirst or kCGBitmapByteOrder32Little);
+    CGColorSpaceRelease(ColorSpace);
+    CGContextDrawImage(Context, rect, Image);
+    CGImageRelease(Image);
+    CGContextRelease(Context);
   end;
 end;
 
@@ -202,7 +181,6 @@ var
   Bounds: TBox;
   Image: CGImageRef;
   Rect: CGRect;
-  ScalingFactor: Double;
   ColorSpace: CGColorSpaceRef;
   Context: CGContextRef;
 begin
@@ -217,45 +195,33 @@ begin
 
   if Bounds.Contains(Bounds.X1 + X, Bounds.Y1 + Y, Width, Height) then
   begin
-    if (FImage <> nil) then
+    if (FData <> nil) then
       raise Exception.Create('FreeReturnData has not been called');
 
-    rect := CGRectMake(x, y, width, height);
-    image := CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, FWindow, kCGWindowImageBoundsIgnoreFraming);
+    Rect := CGRectMake(x, y, width, height);
+    Image := CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, FWindow, kCGWindowImageBoundsIgnoreFraming);
 
-    ScalingFactor := NSNumber(NSScreen.mainScreen.valueForKey(NSStr('backingScaleFactor'))).doubleValue;
-    if (ScalingFactor > 1) then
-    begin
-      ColorSpace := CGImageGetColorSpace(image);
-      Context := CGBitmapContextCreate(nil, width, height, 8, 0, ColorSpace, CGImageGetBitmapInfo(image));
-      CGColorSpaceRelease(ColorSpace);
-      CGContextDrawImage(Context, rect, image);
-      CGImageRelease(Image);
-      image := CGBitmapContextCreateImage(Context);
-      CGContextRelease(Context);
-    end;
+    FData := GetMem(width * height * SizeOf(TRGB32));
+    ColorSpace := CGColorSpaceCreateDeviceRGB();
+    Context := CGBitmapContextCreate(FData, width, height, 8, Width * SizeOf(TRGB32), ColorSpace, kCGImageAlphaPremultipliedFirst or kCGBitmapByteOrder32Little);
+    CGColorSpaceRelease(ColorSpace);
+    CGContextDrawImage(Context, rect, Image);
+    CGImageRelease(Image);
+    CGContextRelease(Context);
 
-    self.FImage := Image;
-    if (FImage <> nil) then
-    begin
-      self.FData := CGDataProviderCopyData(CGImageGetDataProvider(image));
-      Result.Ptr := PRGB32(CFDataGetBytePtr(self.FData));
-      Result.IncPtrWith := 0;
-      Result.RowLen := Width;
-    end;
+    Result.Ptr := PRGB32(FData);
+    Result.IncPtrWith := 0;
+    Result.RowLen := Width;
   end;
 end;
 
 procedure TWindowTarget.FreeReturnData;
 begin
-  if (FImage <> nil) then
+  if (FData <> nil) then
   begin
-    CFRelease(FData);
-    CGImageRelease(FImage);
+    FreeMem(Self.FData);
+    FData := nil;
   end;
-
-  FData := nil;
-  FImage := nil;
 end;
 
 procedure TWindowTarget.GetMousePosition(out X, Y: Int32);

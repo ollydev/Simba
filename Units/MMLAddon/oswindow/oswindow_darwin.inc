@@ -96,7 +96,7 @@ end;
 
 function TOSWindow_Helper.GetChildren(Recursive: Boolean): TOSWindowArray;
 begin
-  //Result := []; //XGetChildren(DefaultDisplay, Self, Recursive); //TODO: FIX
+  Result := GetChildWindows(Self);
 end;
 
 procedure TOSWindow_Helper.SetBounds(Bounds: TBox);
@@ -119,11 +119,8 @@ begin
 end;
 
 function GetWindows: TOSWindowArray;
-var
-  Window: TOSWindow;
 begin
-  //Window := XDefaultRootWindow(DefaultDisplay);
-  //Result := Window.GetChildren();
+  Result := GetOnScreenWindows();
 end;
 
 function GetVisibleWindows: TOSWindowArray;
@@ -152,7 +149,7 @@ end;
 
 function GetTopWindows: TOSWindowArray;
 
-  {function IsVisible(var Window: TOSWindow): Boolean;
+  function IsVisible(var Window: TOSWindow): Boolean;
   var
     Windows: TOSWindowArray;
     i: Int32;
@@ -160,30 +157,26 @@ function GetTopWindows: TOSWindowArray;
     Result := Window.IsVisible();
     if (not Result) then
     begin
-      Windows := XGetChildren(DefaultDisplay, Window, False);
-      for i := High(Windows) downto 0 do
+      Windows := GetChildWindows(Window);
+      for i := 0 to High(Windows) do
       begin
         Window := Windows[i];
         if Window.IsVisible() then
           Exit(True);
       end;
     end;
-  end;}
+  end;
 var
-  Windows: TOSWindowArray;
-  windowInfos: CFArrayRef;
+  Windows: TWindowArray;
   i: Int32;
 begin
   SetLength(Result, 0);
-  windowInfos := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
+  Windows := GetOnScreenWindows();
 
-
-
-  Windows := CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID);
-  for i := High(Windows) downto 0 do
-    if IsVisible(Windows[i]) then
+  for i := 0 to High(Windows) do
+    if IsVisible(TOSWindow(Windows[i])) then
     begin
       SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := Windows[i];
+      Result[High(Result)] := TOSWindow(Windows[i]);
     end;
 end;

@@ -27,12 +27,17 @@ type
     storeType: Integer;
   end;
 
+  TWindow = type PtrUInt;
+  TWindowArray = array of TWindow;
+
 function VirtualKeyCodeToMac(AKey: Word): Word;
 function VirtualKeyCodeToCharCode(AKey: Word): Word;
 function isWindowActive(windowId: CGWindowID): Boolean;
 procedure GetCursorPos(out X, Y: Int32);
 function IsMouseButtonDown(Button: CGMouseButton): Boolean;
 function GetWindowInfo(windowId: CGWindowID): TWindowInfo;
+function GetOnScreenWindows(): TWindowArray;
+function GetChildWindows(parent: CGWindowID): TWindowArray;
 
 implementation
 
@@ -164,7 +169,7 @@ type
       CGRectMakeWithDictionaryRepresentation(CFDictionaryGetValue(windowInfo, kCGWindowBounds), bounds);
       boundsRect := CGRectToRect(bounds);
 
-      result.ID := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowNumber)).intValue;
+      result.ID := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowNumber)).unsignedIntValue;
       result.Title := CFStringToString(CFDictionaryGetValue(windowInfo, kCGWindowName));
       result.X := boundsRect.left;
       result.Y := boundsRect.top;
@@ -215,6 +220,57 @@ type
   function IsMouseButtonDown(Button: CGMouseButton): Boolean;
   begin
     Result := CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, Button) > 0;
+  end;
+
+  function GetOnScreenWindows(): TWindowArray;
+  var
+    Windows: CFArrayRef;
+    WindowInfo: CFDictionaryRef;
+    i: Int32;
+    LocalPool: NSAutoReleasePool;
+  begin
+    LocalPool := NSAutoReleasePool.alloc.init;
+    SetLength(Result, 0);
+    Windows := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
+
+    for i := 0 to CFArrayGetCount(Windows) - 1 do
+    begin
+      WindowInfo := CFArrayGetValueAtIndex(Windows, i);
+      SetLength(Result, Length(Result) + 1);
+      Result[i] := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowNumber)).unsignedIntValue;
+    end;
+
+    CFRelease(Windows);
+    LocalPool.release;
+  end;
+
+  function GetChildWindows(parent: CGWindowID): TWindowArray;
+  var
+    ParentPid: Integer;
+    Windows: CFArrayRef;
+    WindowInfo: CFDictionaryRef;
+    i: Int32;
+    LocalPool: NSAutoReleasePool;
+  begin
+    ParentPid := GetWindowInfo(parent).ownerPid;
+
+    LocalPool := NSAutoReleasePool.alloc.init;
+    SetLength(Result, 0);
+    Windows := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenBelowWindow, parent);
+
+    for i := 0 to CFArrayGetCount(Windows) - 1 do
+    begin
+      WindowInfo := CFArrayGetValueAtIndex(Windows, i);
+
+      if (ParentPid = NSNumber(CFDictionaryGetValue(WindowInfo, kCGWindowOwnerPID)).intValue) then
+      begin
+        SetLength(Result, Length(Result) + 1);
+        Result[High(Result)] := NSNumber(CFDictionaryGetValue(WindowInfo, kCGWindowNumber)).unsignedIntValue;
+      end;
+    end;
+
+    CFRelease(Windows);
+    LocalPool.release;
   end;
 
 end.
