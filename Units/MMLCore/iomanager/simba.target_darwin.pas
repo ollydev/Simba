@@ -246,17 +246,20 @@ begin
 end;
 
 procedure TWindowTarget.MoveMouse(X, Y: Int32);
-var
-  event: CGEventRef;
+{var
+  event: CGEventRef;}
 begin
   if FAutoFocus then
     ActivateClient();
 
   MouseClientAreaOffset(X, Y);
 
+  {CGWarpCursorPos(
   event := CGEventCreateMouseEvent(nil, {kCGEventMouseMoved} 5, CGPointMake(x, y), 0); //CGWarpCursorPos
   CGEventPost(kCGSessionEventTap, event);
-  CFRelease(event);
+  CFRelease(event);}
+
+  CGWarpMouseCursorPosition(CGPointMake(x, y));
 end;
 
 procedure TWindowTarget.HoldMouse(X, Y: Int32; Button: TClickType);
