@@ -53,20 +53,6 @@ implementation
 uses
   simba.darwin_inputhelpers;
 
-function GetMacKeyCode(Key: Word): Word;
-begin
-  if Key in [VK_A .. VK_Z] then
-  begin
-    Key := 0;
-  end;
-
-  if Key in [VK_0 .. VK_9] then
-  begin
-    Key := VK_NUMPAD0 + Key - VK_0;
-  end;
-  Result := VirtualKeyCodeToMac(Key);
-end;
-
 procedure SendKeyInput(Key: Word; Down: Boolean);
 var
   Char: Word;
@@ -77,7 +63,12 @@ begin
     Char := Ord('A') + Key - VK_A;
   end;
 
-  CGPostKeyboardEvent(Char, GetMacKeyCode(Key), Integer(Down));
+  if Key in [VK_0 .. VK_9] then
+  begin
+    Char := Ord('0') + Key - VK_0;
+  end;
+
+  CGPostKeyboardEvent(Char, VirtualKeyCodeToMac(Key), boolean_t(Down));
 end;
 
 function TWindowTarget.GetHandle: PtrUInt;
@@ -406,7 +397,7 @@ end;
 
 function TWindowTarget.IsKeyHeld(Key: Int32): Boolean;
 begin
-  Result := Boolean(CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, GetMacKeyCode(key)));
+  Result := Boolean(CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, VirtualKeyCodeToMac(key)));
 end;
 
 function TWindowTarget.GetKeyCode(Character: Char): Int32;

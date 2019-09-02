@@ -18,7 +18,7 @@ type
     width: Integer;
     height: Integer;
     alpha: Single;
-    minimized: Boolean;
+    onScreen: Boolean;
     layer: Integer;
     memoryUsage: Integer;
     ownerName: String;
@@ -30,14 +30,27 @@ type
   TWindow = type PtrUInt;
   TWindowArray = array of TWindow;
 
-function VirtualKeyCodeToMac(AKey: Word): Word;
-function VirtualKeyCodeToCharCode(AKey: Word): Word;
-function isWindowActive(windowId: CGWindowID): Boolean;
-procedure GetCursorPos(out X, Y: Int32);
-function IsMouseButtonDown(Button: CGMouseButton): Boolean;
-function GetWindowInfo(windowId: CGWindowID): TWindowInfo;
-function GetOnScreenWindows(): TWindowArray;
-function GetChildWindows(parent: CGWindowID): TWindowArray;
+  //Input functions
+  function VirtualKeyCodeToMac(AKey: Word): Word;
+  function VirtualKeyCodeToCharCode(AKey: Word): Word;
+
+  //Window functions
+  function isWindowActive(windowId: CGWindowID): Boolean;
+  function SetWindowActive(windowId: CGWindowID): Boolean;
+  procedure GetCursorPos(out X, Y: Int32);
+  function IsMouseButtonDown(Button: CGMouseButton): Boolean;
+  function GetWindowInfo(windowId: CGWindowID): TWindowInfo;
+  function GetOnScreenWindows(): TWindowArray;
+  function GetChildWindows(parent: CGWindowID): TWindowArray;
+
+  //AX functions
+  function GetChildWindowsAX(parent: CGWindowID): TWindowArray;
+  function GetActiveWindowAX(): CGWindowID;
+  procedure SetWindowBoundsAX(window: CGWindowID; X, Y, Width, Height: Integer);
+
+  //Private API..
+  function AXUIElementGetWindow(element: AXUIElementRef; var windowId: CGWindowID): AXError; external name '__AXUIElementGetWindow';
+
 
 implementation
 
@@ -52,7 +65,6 @@ type
   NSWorkspaceFix = objccategory external (NSWorkspace)
     function frontmostApplication(): NSRunningApplication; message 'frontmostApplication';
     function activateWithOptions(options: Integer): CBool; message 'activateWithOptions:';
-    class function runningApplicationWithProcessIdentifier(pid: Integer): NSRunningApplication; message 'runningApplicationWithProcessIdentifier:';
   end;
 
   function VirtualKeyCodeToMac(AKey: Word): Word;
@@ -176,7 +188,7 @@ type
       result.Width := boundsRect.width;
       result.Height := boundsRect.height;
       result.Alpha := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowAlpha)).floatValue;
-      result.Minimized := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowIsOnscreen)).boolValue;
+      result.onScreen := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowIsOnscreen)).boolValue;
       result.Layer := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowLayer)).intValue;
       result.MemoryUsage := NSNumber(CFDictionaryGetValue(windowInfo, kCGWindowMemoryUsage)).intValue;
       result.OwnerName := CFStringToString(CFDictionaryGetValue(windowInfo, kCGWindowOwnerName));
@@ -200,9 +212,16 @@ type
     LocalPool.release;
   end;
 
-  function setActive(windowId: CGWindowID): Boolean;
+  //Does not actually set the window active.. It sets ALL windows of the process active..
+  function SetWindowActive(windowId: CGWindowID): Boolean;
+  var
+    app: NSRunningApplication;
+    LocalPool: NSAutoReleasePool;
   begin
-
+    LocalPool := NSAutoReleasePool.alloc.init;
+    app := NSRunningApplication.runningApplicationWithProcessIdentifier(GetWindowInfo(windowId).ownerPid);
+    Result := app.activateWithOptions(NSApplicationActivationOptions_NSApplicationActivateIgnoringOtherApps);
+    LocalPool.release;
   end;
 
   procedure GetCursorPos(out X, Y: Int32);
@@ -222,6 +241,7 @@ type
     Result := CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, Button) > 0;
   end;
 
+  //Return every single window that is on screen..
   function GetOnScreenWindows(): TWindowArray;
   var
     Windows: CFArrayRef;
@@ -244,6 +264,7 @@ type
     LocalPool.release;
   end;
 
+  //Retrieve child windows of a parent with the same PID..
   function GetChildWindows(parent: CGWindowID): TWindowArray;
   var
     ParentPid: Integer;
@@ -256,12 +277,11 @@ type
 
     LocalPool := NSAutoReleasePool.alloc.init;
     SetLength(Result, 0);
-    Windows := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenBelowWindow, parent);
+    Windows := CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, parent);
 
     for i := 0 to CFArrayGetCount(Windows) - 1 do
     begin
       WindowInfo := CFArrayGetValueAtIndex(Windows, i);
-
       if (ParentPid = NSNumber(CFDictionaryGetValue(WindowInfo, kCGWindowOwnerPID)).intValue) then
       begin
         SetLength(Result, Length(Result) + 1);
@@ -271,6 +291,114 @@ type
 
     CFRelease(Windows);
     LocalPool.release;
+  end;
+
+  //Can actually retrieve child windows of a parent.. not the non-sense above..
+  function GetChildWindowsAX(parent: CGWindowID): TWindowArray;
+  var
+    ParentPid: Integer;
+    application: AXUIElementRef;
+    childWindows: CFArrayRef;
+    children: NSArray;
+    windowId: CGWindowID;
+    error: AXError;
+    i: Int32;
+    LocalPool: NSAutoReleasePool;
+  begin
+    ParentPid := GetWindowInfo(parent).ownerPid;
+
+    LocalPool := NSAutoReleasePool.alloc.init;
+    SetLength(Result, 0);
+    application := AXUIElementCreateApplication(ParentPid);
+
+    childWindows := nil;
+    AXUIElementCopyAttributeValues(application, CFSTR('AXWindows'), 0, 99999, childWindows);
+    if childWindows <> nil then
+    begin
+      children := NSArray(childWindows);
+
+      for i := 0 to children.count - 1 do
+      begin
+        windowId := 0;
+        error := AXUIElementGetWindow(AXUIElementRef(children.objectAtIndex(i)), windowId);
+        if (error = kAXErrorSuccess) then
+        begin
+          SetLength(Result, Length(Result) + 1);
+          Result[High(Result)] := windowId;
+        end;
+     end;
+
+      CFRelease(childWindows);
+    end;
+
+    CFRelease(application);
+    LocalPool.release;
+  end;
+
+  function GetActiveWindowAX(): CGWindowID;
+  var
+    error: AXError;
+    systemWide: AXUIElementRef;
+    FocusedApplication: AXUIElementRef;
+    FocusedWindow: AXUIElementRef;
+    LocalPool: NSAutoReleasePool;
+  begin
+    LocalPool := NSAutoReleasePool.alloc.init;
+    systemWide := AXUIElementCreateSystemWide();
+
+    Result := kCGNullWindowID;
+    AXUIElementCopyAttributeValue(systemWide, CFSTR('AXFocusedApplication'), FocusedApplication);
+    AXUIElementCopyAttributeValue(FocusedApplication, CFStringRef(NSAccessibilityFocusedWindowAttribute), FocusedWindow);
+    error := AXUIElementGetWindow(FocusedWindow, Result);
+    if error <> kAXErrorSuccess then
+       Result := kCGNullWindowID;
+
+    CFRelease(FocusedApplication);
+    CFRelease(FocusedWindow);
+    CFRelease(systemWide);
+    LocalPool.release;
+  end;
+
+  procedure SetWindowBoundsAX(window: CGWindowID; X, Y, Width, Height: Integer);
+  var
+    application: AXUIElementRef;
+    windows: CFArrayRef;
+    windowId: CGWindowID;
+    error: AXError;
+    origin: NSPoint;
+    size: NSSize;
+    storage: CFTypeRef;
+    i: Int32;
+  begin
+    application := AXUIElementCreateApplication(GetWindowInfo(window).ownerPid);
+    origin.x := CGFloat(X);
+    origin.y := CGFloat(Y);
+    size.width := CGFloat(Width);
+    size.height := CGFloat(Height);
+
+    windows := nil;
+    AXUIElementCopyAttributeValues(application, CFSTR('AXWindows'), 0, 99999, windows);
+    if windows <> nil then
+    begin
+      for i := 0 to CFArrayGetCount(windows) - 1 do
+      begin
+        windowId := kCGNullWindowID;
+        error := AXUIElementGetWindow(AXUIElementRef(CFArrayGetValueAtIndex(windows, i)), windowId);
+        if ((error = kAXErrorSuccess) and (windowId = window)) then
+        begin
+          storage := AXValueCreate(kAXValueCGPointType, UnivPtr(@origin));
+          AXUIElementSetAttributeValue(application, CFStringRef(NSAccessibilityPositionAttribute), storage);
+          CFRelease(storage);
+
+          storage := AXValueCreate(kAXValueCGSizeType, UnivPtr(@size));
+          AXUIElementSetAttributeValue(application, CFStringRef(NSAccessibilitySizeAttribute), storage);
+          CFRelease(storage);
+          break;
+        end;
+      end;
+
+      CFRelease(windows);
+    end;
   end;
 
 end.

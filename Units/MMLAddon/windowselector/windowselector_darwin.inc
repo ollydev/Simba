@@ -3,98 +3,52 @@
 uses
   cocoaall, macosall, simba.darwin_inputhelpers;
 
-type TWindow = CGWindowID; //TODO: Abstract
-
 function TMWindowSelector.Drag: TOSWindow;
-type
-  TWindowTree = record
-    Window: TOSWindow;
-    Children: array of TWindowTree;
-  end;
-
-  procedure BuildTree(var Tree: TWindowTree; Window: TOSWindow);
-  var
-    Windows: TOSWindowArray;
-    i: Int32;
-  begin
-    SetLength(Tree.Children, Length(Tree.Children) + 1);
-    Tree.Children[High(Tree.Children)].Window := Window;
-
-    Windows := Window.GetChildren(False);
-    for i := High(Windows) downto 0 do
-      BuildTree(Tree.Children[High(Tree.Children)], Windows[i]);
-  end;
-
-  function SearchTree(var Tree: TWindowTree; X, Y: Int32): TOSWindow;
-  var
-    i: Int32;
-    Temp: TOSWindow;
-  begin
-    Result := 0;
-
-    for i := 0 to High(Tree.Children) do
-    begin
-      with Tree.Children[i].Window.GetBounds() do
-        if (X > X1) and (Y > Y1) and (X < X2) and (Y < Y2) then
-          Result := Tree.Children[i].Window;
-
-      Temp := SearchTree(Tree.Children[i], X, Y);
-      if Temp <> 0 then
-        Result := Temp;
-    end;
-  end;
-
 var
   Windows: TOSWindowArray;
-  Trees: array of TWindowTree;
   X, Y: Int32;
-  Bounds: TBox;
-  Window: TOSWindow;
+  WindowInfo: TWindowInfo;
   i: Int32;
 begin
   Result := 0;
 
+  //Only way that works for me atm.. not sure how to use the `Tree` search algorithm..
   Windows := GetTopWindows();
-
-  SetLength(Trees, Length(Windows));
-  for i := 0 to High(Windows) do
-    BuildTree(Trees[i], Windows[i]);
 
   while (IsMouseButtonDown(kCGMouseButtonLeft)) do
   begin
     GetCursorPos(X, Y);
+    Result := 0;
 
-    Window := 0;
-    for i := 0 to High(Trees) do
+    for i := 0 to High(Windows) do
     begin
-      Window := SearchTree(Trees[i], X, Y);
-      if (Window <> 0) then
-        Break;
-    end;
-    if (Window = 0) then
-      Window := GetDesktopWindow();
-    if Result <> Window then
-    begin
-      Bounds := Window.GetBounds();
-      with Window.GetRootWindow().GetBounds() do
+      WindowInfo := GetWindowInfo(Windows[i]);
+      if not WindowInfo.sharingState then //Invalid Windows "Usually"
+        continue;
+
+      //Search only NORMAL desktop windows..
+      //Does NOT include the dock and other stuff like the start menu, etc..
+      //Finder is -25, Dock is 20, Finder is Int.low, etc..
+      if WindowInfo.layer <> 0 then
+        continue;
+
+      with Windows[i].GetBounds() do
       begin
-        if Bounds.X1 < X1 then Bounds.X1 := X1;
-        if Bounds.Y1 < Y1 then Bounds.Y1 := Y1;
-        if Bounds.X2 > X2 then Bounds.X2 := X2;
-        if Bounds.Y2 > Y2 then Bounds.Y2 := Y2;
+        if (X > X1) and (Y > Y1) and (X < X2) and (Y < Y2) then
+        begin
+          Result := Windows[i];
+          break;
+        end;
       end;
-      with GetDesktopWindow().GetBounds() do
-      begin
-        if Bounds.X1 < X1 then Bounds.X1 := X1;
-        if Bounds.Y1 < Y1 then Bounds.Y1 := Y1;
-        if Bounds.X2 > X2 then Bounds.X2 := X2;
-        if Bounds.Y2 > Y2 then Bounds.Y2 := Y2;
-      end;
-      with Bounds do
-        FForm.SetBounds(X1, Y1, X2-X1-1, Y2-Y1-1);
-      FForm.ShowOnTop();
-      Result := Window;
     end;
+
+    if Result = 0 then
+      Result := GetDesktopWindow();
+
+    with Result.GetBounds() do
+      FForm.SetBounds(X1, Y1, X2-X1-1, Y2-Y1-1);
+    FForm.ShowOnTop();
+
     Sleep(25);
     Application.ProcessMessages();
   end;

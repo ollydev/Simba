@@ -39,7 +39,7 @@ end;
 
 function TOSWindow_Helper.IsVisible: Boolean;
 begin
-  Result := True; //TODO: Implement
+  Result := GetWindowInfo(Self).onScreen; //No other way unless we check if any windows are on top of it..
 end;
 
 function TOSWindow_Helper.GetPID: UInt32;
@@ -49,12 +49,12 @@ end;
 
 function TOSWindow_Helper.GetRootWindow: TOSWindow;
 begin
-  Result := Self;
+  Result := Self;   //Not sure..
 end;
 
 function TOSWindow_Helper.GetClassName: WideString;
 begin
-  Result := ''; //TODO: Implement
+  Result := ''; //No such thing on MacOS..
 end;
 
 function TOSWindow_Helper.GetTitle: WideString;
@@ -101,16 +101,13 @@ end;
 
 procedure TOSWindow_Helper.SetBounds(Bounds: TBox);
 begin
-  //XMoveResizeWindow(DefaultDisplay, Self, Bounds.X1, Bounds.Y1, Bounds.X2 - Bounds.X1, Bounds.Y2 - Bounds.Y1);
-  //XSync(DefaultDisplay, 0);
-  //TODO: FIX
+  SetWindowBoundsAX(Self, Bounds.X1, Bounds.Y1, Bounds.X2 - Bounds.X1, Bounds.Y2 - Bounds.Y1);
 end;
 
 function TOSWindow_Helper.Activate: Boolean;
 begin
-  //XSetActiveWindow(DefaultDisplay, Self.GetRootWindow());
-  //Result := Self.IsActive(1000);
-  //TODO: Fix
+  SetWindowActive(Self);
+  Result := Self.IsActive(1000);
 end;
 
 procedure TOSWindow_Helper.Kill;
@@ -139,12 +136,12 @@ end;
 
 function GetActiveWindow: TOSWindow;
 begin
-  //Result := //XGetActiveWindow(DefaultDisplay);
+  Result := GetActiveWindowAX();
 end;
 
 function GetDesktopWindow: TOSWindow;
 begin
-  Result := kCGNullWindowID;
+  Result := 2; //Always 2.. but we can get it with APis if needed..
 end;
 
 function GetTopWindows: TOSWindowArray;
