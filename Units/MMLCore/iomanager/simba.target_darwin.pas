@@ -158,6 +158,7 @@ begin
     Image := CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, FWindow, kCGWindowImageBoundsIgnoreFraming);
 
     Result := GetMem(Width * Height * SizeOf(TRGB32));
+    FillByte(Result, Width * Height * SizeOf(TRGB32), $0);
     ColorSpace := CGColorSpaceCreateDeviceRGB();
     Context := CGBitmapContextCreate(Result, width, height, 8, Width * SizeOf(TRGB32), ColorSpace, kCGImageAlphaPremultipliedFirst or kCGBitmapByteOrder32Little);
     CGColorSpaceRelease(ColorSpace);
@@ -193,6 +194,7 @@ begin
     Image := CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, FWindow, kCGWindowImageBoundsIgnoreFraming);
 
     FData := GetMem(width * height * SizeOf(TRGB32));
+    FillByte(FData, Width * Height * SizeOf(TRGB32), $0);
     ColorSpace := CGColorSpaceCreateDeviceRGB();
     Context := CGBitmapContextCreate(FData, width, height, 8, Width * SizeOf(TRGB32), ColorSpace, kCGImageAlphaPremultipliedFirst or kCGBitmapByteOrder32Little);
     CGColorSpaceRelease(ColorSpace);
