@@ -57,14 +57,9 @@ implementation
 uses
   LCLType, cocoaall, cocoa_extra, cocoautils;
 
-const
-  NSApplicationActivationOptions_NSApplicationActivateAllWindows = 1 shl 0;
-  NSApplicationActivationOptions_NSApplicationActivateIgnoringOtherApps = 1 shl 1;
-
 type
   NSWorkspaceFix = objccategory external (NSWorkspace)
     function frontmostApplication(): NSRunningApplication; message 'frontmostApplication';
-    function activateWithOptions(options: Integer): CBool; message 'activateWithOptions:';
   end;
 
   function VirtualKeyCodeToMac(AKey: Word): Word;
@@ -220,7 +215,7 @@ type
   begin
     LocalPool := NSAutoReleasePool.alloc.init;
     app := NSRunningApplication.runningApplicationWithProcessIdentifier(GetWindowInfo(windowId).ownerPid);
-    Result := app.activateWithOptions(NSApplicationActivationOptions_NSApplicationActivateIgnoringOtherApps);
+    Result := app.activateWithOptions(NSApplicationActivateIgnoringOtherApps);
     LocalPool.release;
   end;
 
